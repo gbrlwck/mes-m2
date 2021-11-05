@@ -40,10 +40,10 @@
             mescc:link
             multi-opt))
 
-(define GUILE-with-output-to-file with-output-to-file)
-(define (with-output-to-file file-name thunk)
-  (if (equal? file-name "-") (thunk)
-      (GUILE-with-output-to-file file-name thunk)))
+;; (define GUILE-with-output-to-file with-output-to-file)
+;; (define (with-output-to-file file-name thunk)
+;;   (if (equal? file-name "-") (thunk)
+;;       (GUILE-with-output-to-file file-name thunk)))
 
 (define (mescc:preprocess options)
   (let* ((pretty-print/write (string->symbol (option-ref options 'write (if guile? "pretty-print" "write"))))
