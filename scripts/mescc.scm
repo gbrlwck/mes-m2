@@ -66,7 +66,12 @@
   (mes-use-module (mescc))
   (mescc:main (command-line)))
  (guile
-  (use-modules (mescc))))
+  (use-modules (mescc)
+               (system vm trace))))
+
+(define TRACE #t)
 
 (define (main args)
-  (mescc:main args))
+  (if TRACE
+      (call-with-trace (lambda _ (mescc:main args)))
+      (mescc:main args)))
