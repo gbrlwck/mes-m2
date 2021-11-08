@@ -198,7 +198,7 @@
          (verbose? (count-opt options 'verbose))
          (M1 (or (getenv "M1") "M1"))
          (command `(,M1
-                    "--LittleEndian"
+                    "--little-endian"
                     ,@(arch-get-architecture options)
                     "-f" ,(arch-find options (arch-get-m1-macros options))
                     ,@(append-map (cut list "-f" <>) M1-files)
