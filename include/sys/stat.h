@@ -57,7 +57,7 @@ struct stat
   unsigned long  __foo0;
   unsigned long  __foo1;
 };
-#elif __x86_64__
+#elif __x86_64__ || __riscv64__
 struct stat
 {
   unsigned long  st_dev;
@@ -107,7 +107,7 @@ int stat (char const *file_name, struct stat *buf);
 #define S_IWUSR 00200
 #define S_IRUSR 00400
 
-#define S_ISUID 0400
+#define S_ISUID 04000
 #define S_ISGID 02000
 #define S_IXGRP 00010
 #define S_IXOTH 00001

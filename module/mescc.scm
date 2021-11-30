@@ -110,6 +110,7 @@ Options:
   --base-address=ADRRESS
                       use BaseAddress ADDRESS [0x1000000]
   --numbered-arch     mescc-tools use numbered arch
+  -c                  preprocess, compile and assemble, but do not link
   -D DEFINE[=VALUE]   define DEFINE [VALUE=1]
   -E                  preprocess only; do not compile, assemble or link
   -g                  add debug info [GDB, objdump] TODO: hex2 footer
