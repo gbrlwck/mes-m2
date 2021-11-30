@@ -26,7 +26,18 @@
 #include_next <setjmp.h>
 #else // ! SYSTEM_LIBC
 
-#if __arm__
+#if __riscv__
+typedef struct
+{
+  long __pc;
+  long __regs[12]; // according to https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/riscv/bits/setjmp.h;h=9181b96f7cd2a5003ac049f797d7e320985d35b9;hb=HEAD
+  // registers saved by >>callee<<
+  // sp
+  // s0/fp
+  // s1-s11
+  long __sp;
+} __jmp_buf;
+#elif __arm__
 #if __GNUC__ || __TINYC__
 #warning "It is not supported to use mes' setjmp implementation together with GCC.  Continuing with best-effort implementation."
 typedef struct

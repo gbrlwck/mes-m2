@@ -28,6 +28,7 @@
   #:use-module (mescc armv4 info)
   #:use-module (mescc i386 info)
   #:use-module (mescc x86_64 info)
+  #:use-module (mescc riscv64 info)
   #:use-module (mescc preprocess)
   #:use-module (mescc compile)
   #:use-module (mescc M1)
@@ -39,10 +40,10 @@
             mescc:link
             multi-opt))
 
-(define GUILE-with-output-to-file with-output-to-file)
-(define (with-output-to-file file-name thunk)
-  (if (equal? file-name "-") (thunk)
-      (GUILE-with-output-to-file file-name thunk)))
+;; (define GUILE-with-output-to-file with-output-to-file)
+;; (define (with-output-to-file file-name thunk)
+;;   (if (equal? file-name "-") (thunk)
+;;       (GUILE-with-output-to-file file-name thunk)))
 
 (define (mescc:preprocess options)
   (let* ((pretty-print/write (string->symbol (option-ref options 'write (if guile? "pretty-print" "write"))))
@@ -136,8 +137,6 @@
 (define (mescc:link options)
   (let* ((files (option-ref options '() '("a.c")))
          (source-files (filter (disjoin .c? .E?) files))
-         (s-files (filter .s? files))
-         (o-files (filter .o? files))
          (input-file-name (car files))
          (hex2-file-name (if (or (string-suffix? ".hex2" input-file-name)
                                  (string-suffix? ".o" input-file-name)) input-file-name
@@ -199,7 +198,7 @@
          (verbose? (count-opt options 'verbose))
          (M1 (or (getenv "M1") "M1"))
          (command `(,M1
-                    "--LittleEndian"
+                    "--little-endian"
                     ,@(arch-get-architecture options)
                     "-f" ,(arch-find options (arch-get-m1-macros options))
                     ,@(append-map (cut list "-f" <>) M1-files)
@@ -336,7 +335,8 @@
   (let ((arch (arch-get options)))
     (cond ((equal? arch "arm") (armv4-info))
           ((equal? arch "x86") (x86-info))
-          ((equal? arch "x86_64") (x86_64-info)))))
+          ((equal? arch "x86_64") (x86_64-info))
+          ((equal? arch "riscv64") (riscv64-info)))))
 
 (define (arch-get-defines options)
   (let* ((arch (arch-get options))
@@ -352,7 +352,9 @@
                   ((equal? arch "x86")
                    "__i386__=1")
                   ((equal? arch "x86_64")
-                   "__x86_64__=1"))
+                   "__x86_64__=1")
+                  ((equal? arch "riscv64")
+                   "__riscv64__=1"))
             `(,(string-append "__SIZEOF_INT__=" (number->string int))
               ,(string-append "__SIZEOF_LONG__=" (number->string long))
               ,@(if (< long-long 8) '() ;C99: long long must be >= 8
@@ -362,14 +364,15 @@
   (let* ((machine (option-ref options 'machine #f))
          (arch (option-ref options 'arch #f)))
     (or machine
-        (if (member arch '("x86_64")) "64"
+        (if (member arch '("x86_64" "riscv64")) "64"
             "32"))))
 
 (define (arch-get-m1-macros options)
   (let ((arch (arch-get options)))
     (cond ((equal? arch "arm") "arm.M1")
           ((equal? arch "x86") "x86.M1")
-          ((equal? arch "x86_64") "x86_64.M1"))))
+          ((equal? arch "x86_64") "x86_64.M1")
+          ((equal? arch "riscv64") "riscv64.M1"))))
 
 (define (arch-get-architecture options)
   (let* ((arch (arch-get options))
@@ -378,7 +381,8 @@
     (list flag
           (cond ((equal? arch "arm") (if numbered-arch? "40" "armv7l"))
                 ((equal? arch "x86") (if numbered-arch? "1" "x86"))
-                ((equal? arch "x86_64") (if numbered-arch? "2" "amd64"))))))
+                ((equal? arch "x86_64") (if numbered-arch? "2" "amd64"))
+                ((equal? arch "riscv64") (if numbered-arch? "3" "riscv64"))))))
 
 (define (multi-opt option-name) (lambda (o) (and (eq? (car o) option-name) (cdr o))))
 (define (count-opt options option-name)
