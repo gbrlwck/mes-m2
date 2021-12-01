@@ -44,22 +44,26 @@
     ))
 
 (define (riscv64:function-locals . rest)
-  ;; allocate stack for local variables?
+  ;; allocate stack for local variables
   ;; what's `rest' used for?  is it being used at all?
-  `(("#sub____$i32,%esp" (#:immediate ,(+ (* 4 1025) (* 20 4)))))) ; 4*1024 buf, 20 local vars
+  `(("RD_SP" (#:immediate ,(- (+ (* 4 1025) (* 20 4)))) "ADDI")) ; 4*1024 buf, 20 local vars
+  ;`(("#sub____$i32,%esp" (#:immediate ,(+ (* 4 1025) (* 20 4)))))
+  )
 
 (define (riscv64:r->local info n)
   (or n (error "invalid value: riscv64:r->local: " n))
   (let ((r (get-r info))
         (n (- 0 (* 4 n))))
-    `(,(if (< (abs n) #x80) `(,(string-append "mov____%" r ",0x8(%ebp)") (#:immediate1 ,n))
-           `(,(string-append "mov____%" r ",0x32(%ebp)") (#:immediate ,n))))))
+    `((r (#:immediate ,n) "SD")) ;; we align everything 64 bit (?)
+    ;; `(,(if (< (abs n) #x80)
+    ;;       `(,(string-append "mov____%" r ",0x8(%ebp)") (#:immediate1 ,n))
+    ;;       `(,(string-append "mov____%" r ",0x32(%ebp)") (#:immediate ,n))))
+    ))
 
 (define (riscv64:value->r info v)
   ;; store value in register?
   (let ((r (get-r info)))
-    `((,(string-append r " !" (number->string v) " ADDI") ;(#:immediate1 ,v)
-       ))))
+    `((r " " (#:immediate1 v) "ADDI"))))
 
 (define (riscv64:ret . rest)
   ;; return (from function call)
@@ -83,7 +87,7 @@
   ;; add register0 to register1
   (let ((r0 (get-r0 info))
         (r1 (get-r1 info)))
-    `((,(string-append "add____%" r1 ",%" r0)))))
+    `((,(string-append "%" r1 " " r0 " ADD")))));;,(string-append "add____%" r1 ",%" r0)
 
 (define (riscv64:call-label info label n)
   ;; jump to label ?
@@ -103,7 +107,12 @@
   ;; ???
   (let* ((r (get-r info))
          (l (e->l r)))
-    `((,(string-append "sete___%" l))
+    ;; sete: https://stackoverflow.com/questions/53011701/what-does-the-instruction-sete-do-in-assembly
+    ;; movzbl: https://stackoverflow.com/questions/9317922/what-does-the-movzbl-instruction-do-in-ia-32-att-syntax#9318005
+    `(
+      ;; sets target value to 0 or one depending on ZERO Flag
+      (,(string-append "sete___%" l))
+      ;; loads r into l (?)
       (,(string-append "movzbl_%" l ",%" r)))))
 
 (define (riscv64:r0-r1 info)
@@ -114,19 +123,23 @@
 
 (define (riscv64:zf->r info)
   ;; zf?
+  ;; identical to r-negate?
   (let* ((r (get-r info))
          (l (e->l r)))
     `((,(string-append "sete___%" l))
       (,(string-append "movzbl_%" l ",%" r)))))
 
 (define (riscv64:xor-zf info)
-  ;; ???
-  '(("lahf")
+  ;; XOR Zero-Flag
+  '(;; LAHF — Load Status Flags into AH Register
+    ("lahf")
+    ;; XOR the zero flag with
     ("xor____$i8,%ah" (#:immediate1 #x40))
+    ;; store AH into flags
     ("sahf")))
 
 (define (riscv64:r->local+n info id n)
-  ;; ???
+  ;; lookup local variable
   (let ((n (+ (- 0 (* 4 id)) n))
         (r (get-r info)))
     `(,(if (< (abs n) #x80) `(,(string-append "mov____%" r ",0x8(%ebp)") (#:immediate1 ,n))
@@ -149,7 +162,7 @@
     `((,(string-append "addw___$i8,(%" r ")") (#:immediate2 ,v)))))
 
 (define (riscv64:local-ptr->r info n)
-  ;; what's a local pointer?
+  ;; what's a *local* pointer?
   (let ((r (get-r info)))
     (let ((n (- 0 (* 4 n))))
       `((,(string-append "mov____%ebp,%" r))
@@ -438,13 +451,6 @@
          (r1 (get-r1 info)))
     `((,(string-append "mov____%" r0 ",(%" r1 ")")))))
 
-;; exact duplicate?
-;; (define (riscv64:byte-r0->r1-mem info)
-;;   (let* ((r0 (get-r0 info))
-;;          (r1 (get-r1 info))
-;;          (l0 (e->l r0)))
-;;     `((,(string-append "mov____%" l0 ",(%" r1 ")")))))
-
 (define (riscv64:word-r0->r1-mem info)
   (let* ((r0 (get-r0 info))
          (r1 (get-r1 info))
@@ -544,22 +550,31 @@
 
 (define (riscv64:push-r0 info)
   (let ((r0 (get-r0 info)))
-    `((,(string-append "push___%" r0)))))
+    `((;;,(string-append "push___%" r0)
+       "RD_SP !-8 ADDI" ;; grow stack
+       ,(string-append "RD_SP " r0 " SD") ;; store value
+       ))))
 
 (define (riscv64:r1->r0 info)
+  ;; move r1 to r0
   (let ((r0 (get-r0 info))
         (r1 (get-r1 info)))
-    `((,(string-append  "mov____%" r1 ",%" r0)))))
+    `((;;,(string-append  "mov____%" r1 ",%" r0)
+       ,(string-append r1 " " r0 " ADDI")))))
 
 (define (riscv64:pop-r0 info)
+  ;; pop stack into r0
   (let ((r0 (get-r0 info)))
-    `((,(string-append "pop____%" r0)))))
+    `((;;,(string-append "pop____%" r0)
+       ,(string-append r0 " RS1_SP LD")
+       "RD_SP !8 ADDI")))) ;; shrink stack
 
 (define (riscv64:swap-r-stack info)
+  ;; swaps register content with stack value
   (let ((r (get-r info)))
     `((,(string-append "xchg___%" r ",(%esp)")))))
 
-(define (riscv64:swap-r1-stack info)
+(define (riscv64:swap-r1-stack info) ;; name vs register used
   (let ((r0 (get-r0 info)))
     `((,(string-append "xchg___%" r0 ",(%esp)")))))
 
@@ -570,20 +585,20 @@
     (if (> (length allocated) 2)
         (let ((r2 (cadddr allocated)))
           `((;,(string-append  "mov____%" r2 ",%" r1)
-             "RD0 RS2 ADDI")))
-        `((,(string-append  "pop____%" r0))
-          (,(string-append  "push___%" r0))))))
+             ,(string-append r2 " " r1 " ADDI"))))
+        `((() ;;,(string-append  "pop____%" r0)
+           )
+          (;;,(string-append  "push___%" r0)
+           )))))
 
 (define riscv64:instructions
-  `(
-    (a?->r . ,riscv64:a?->r)
+  `((a?->r . ,riscv64:a?->r)
     (ae?->r . ,riscv64:ae?->r)
     (b?->r . ,riscv64:b?->r)
     (be?->r . ,riscv64:be?->r)
     (byte-mem->r . ,riscv64:byte-mem->r)
     (byte-r . ,riscv64:byte-r)
     (byte-r->local+n . ,riscv64:byte-r->local+n)
-    (byte-r0->r1-mem . ,riscv64:byte-r0->r1-mem)
     (byte-r0->r1-mem . ,riscv64:byte-r0->r1-mem)
     (byte-r0-mem->r1-mem . ,riscv64:byte-r0-mem->r1-mem)
     (byte-signed-r . ,riscv64:byte-signed-r)
@@ -670,5 +685,4 @@
     (word-r0-mem->r1-mem . ,riscv64:word-r0-mem->r1-mem)
     (word-signed-r . ,riscv64:word-signed-r)
     (xor-zf . ,riscv64:xor-zf)
-    (zf->r . ,riscv64:zf->r)
-    ))
+    (zf->r . ,riscv64:zf->r)))

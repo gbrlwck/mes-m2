@@ -237,7 +237,7 @@
                      ((global? (cdr o)) (global->string (cdr o)))
                      (else (car o))))
              (string? (string-prefix? "_string" label))
-             (foo (when (and verbose? (not (eq? (car (string->list label)) #\_)))
+             (foo (when (and verbose? (not (eq? (car (string->list label)) #\_))) ;; verbose output
                     (display (string-append "    :" label "\n") (current-error-port))))
              (data ((compose global:value cdr) o))
              (data (filter-map labelize data))

@@ -33,9 +33,15 @@
 (define (riscv64-info)
   (make <info> #:types riscv64:type-alist #:registers riscv64:registers #:instructions riscv64:instructions))
 
-(define riscv64:registers '("RD_A0" "fp" "pc" "a0" "a1" "a2" "a7" "t0" "t1" "t2")
-  ;;'("RD_A0" "RD_A1" "RD_A2" ) ;; ?
-  )
+(define riscv64:registers
+  '("RD_A0" "RS1_A0" "RS2_A0"
+    "RD_A1" "RS1_A1" "RS2_A1"
+    "RD_A2" "RS1_A2" "RS2_A2"
+    "RD_A3" "RS1_A3" "RS2_A3"
+    "RD_A4" "RS1_A4" "RS2_A4"
+    "RD_A7" "RS1_A7" "RS2_A7"
+    "RD_FP" "RD_PC" "RD_T0" "RD_T1" "RD_T2"))
+
 (define riscv64:type-alist
   `(("char" . ,(make-type 'signed 1 #f))
     ("short" . ,(make-type 'signed 2 #f))
