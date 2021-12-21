@@ -33,6 +33,7 @@ also: it's "mescc"
 int
 _start ()
 {
+  asm ("# beginning of crt1.c");
   asm ("RD_T0 $i16_000 @0 ADDI"); //asm ("li_____%t0,$i16_0000 @0");
   asm ("RD_T1 $i32 &__stdin ADDI");// asm ("li_____%t1,$i32 &__stdin");
   asm ("RD_T0 RS1_T1 SW"); //asm ("sw_____%t0,0(%t1)");
@@ -69,7 +70,7 @@ _start ()
 
   asm ("RD_T1 $i32 &environ ADDI"); // asm ("li_____%t1,$i32 &environ");
 
-  asm ("RS1_T1 RD_T0 SD"); //asm ("sd_____%t0,0(%t1)");
+  asm ("RD_T0 RS1_T1 SD"); //asm ("sd_____%t0,0(%t1)");
 
   asm ("RD_T5 RS1_FP $i8_0 !0x1 ADDI");// asm ("addi___%t5,%fp,$i8_0 !0x1"); // 0x10 to skip over pushed fp+ra
 
@@ -84,6 +85,7 @@ _start ()
   asm ("RS1_T0 RD_A0 ADDI"); // asm ("mv_____%a0,%t0");
   asm ("RD_A7 $SYS_exit ADDI"); // asm ("li_____%a7,SYS_exit");
   asm ("RETURN"); // this or ECALL?
+  asm ("#end of crt1.c");
   // asm ("ECALL");
   //asm ("EBREAK"); // this is most probably wrong
 }

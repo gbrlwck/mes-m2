@@ -36,6 +36,7 @@
   #:use-module (mescc info)
   #:use-module (mescc as)
   #:use-module (mescc i386 as)
+  #:use-module (mescc riscv64 as)
   #:use-module (mescc M1)
   #:export (c99-ast->info
             c99-input->info
