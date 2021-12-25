@@ -25,7 +25,7 @@
 void
 _exit (int status)
 {
-  asm ("RD_A0 RS1_FP 0x10 LD");// asm ("ld_____%a0,0x10(%fp)");
+  asm ("RD_A0 RS1_FP !0x10 LD");// asm ("ld_____%a0,0x10(%fp)");
   asm ("RD_A7 $SYS_exit ADDI");// asm ("li_____%a7,SYS_exit");
   asm ("ECALL");
   // no need to read return value

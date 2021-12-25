@@ -51,7 +51,11 @@
   (if %reduced-register-count %reduced-register-count
    (length (append (.registers info) (.allocated info)))))
 
+(define flaggy-arch? #f)
+
 (define* (c99-input->info info #:key (prefix "") (defines '()) (includes '()) (arch "") verbose?)
+  (when (equal? arch "riscv64")
+    (set! flaggy-arch? #t))
   (let ((ast (c99-input->ast #:prefix prefix #:defines defines #:includes includes #:arch arch #:verbose? verbose?)))
     (c99-ast->info info ast #:verbose? verbose?)))
 
@@ -107,7 +111,7 @@
 
 (define (ast->type o info)
   (define (type-helper o info)
-    (if (getenv "MESC_DEBUG")
+    (if #t ;(getenv "MESC_DEBUG")
         (format (current-error-port) "type-helper: ~s\n" o))
     (pmatch o
       (,t (guard (type? t)) t)
@@ -1015,8 +1019,9 @@
            (append-text info (mem->r type info))))
 
         ((fctn-call (p-expr (ident ,name)) (expr-list . ,expr-list))
-         (if (equal? name "asm") (let ((arg0 (cadr (cadar expr-list))))
-                                   (append-text info (wrap-as (asm->m1 arg0))))
+         (if (equal? name "asm")
+             (let ((arg0 (cadr (cadar expr-list))))
+               (append-text info (wrap-as (asm->m1 arg0))))
              (let* ((info (append-text info (ast->comment o)))
                     (info (allocate-register info))
                     (allocated (.allocated info))
@@ -1024,7 +1029,8 @@
                     (registers (.registers info))
                     (info (fold push-register info (cdr allocated)))
                     (reg-size (->size "*" info))
-                    (info (if (cc-amd? info) (fold expr->arg info expr-list (iota (length expr-list)))
+                    (info (if (cc-amd? info)
+                              (fold expr->arg info expr-list (iota (length expr-list)))
                               (fold-right expr->arg info expr-list (reverse (iota (length expr-list))))))
                     (info (clone info #:allocated '() #:pushed 0 #:registers (append (reverse allocated) registers)))
                     (n (length expr-list))
@@ -1686,6 +1692,8 @@
         (constants (.constants info))
         (types (.types info))
         (text (.text info)))
+    (if #t ;(getenv "MESC_DEBUG")
+        (format (current-error-port) "ast->info: ~s\n" o))
     (pmatch o
       (((trans-unit . _) . _) (ast-list->info o info))
       ((trans-unit . ,_) (ast-list->info _ info))

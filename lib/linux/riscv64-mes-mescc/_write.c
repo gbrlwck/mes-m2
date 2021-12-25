@@ -25,10 +25,10 @@
 void
 _write (int filedes, void const *buffer, size_t size)
 {
-  asm ("RD_A0 RS1_FP 0x10 LD"); //asm ("ld_____%a0,0x10(%fp)");
-  asm ("RD_A1 RS1_FP 0x18 LD"); //asm ("ld_____%a1,0x18(%fp)");
-  asm ("RD_A2 RS1_FP 0x20 LD"); //asm ("ld_____%a2,0x20(%fp)");
-  asm ("RD_A7 SYS_write ADDI"); //asm ("li_____%a7,SYS_write");
+  asm ("RD_A0 RS1_FP !0x10 LD"); //asm ("ld_____%a0,0x10(%fp)");
+  asm ("RD_A1 RS1_FP !0x18 LD"); //asm ("ld_____%a1,0x18(%fp)");
+  asm ("RD_A2 RS1_FP !0x20 LD"); //asm ("ld_____%a2,0x20(%fp)");
+  asm ("RD_A7 $SYS_write ADDI"); //asm ("li_____%a7,SYS_write");
   asm ("ECALL"); //asm ("ecall");
   asm ("RD_T0 RS1_A0 ADDI"); //asm ("mv_____%t0,%a0");
 }

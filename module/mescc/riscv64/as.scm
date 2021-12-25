@@ -84,7 +84,7 @@
   ;; load local variable into register
   (let ((r (get-r info))
         (n (- 0 (* 4 n))))
-    `(,(string-append "RD_" r " " (#:immediate1 n) " LD")
+    `(,(string-append "RD_" r " RS1_SP " " LD ") (#:immediate1 n)
       ;; (if (< (abs n) #x80) `(,(string-append "mov____0x8(%ebp),%" r) (#:immediate1 ,n))
       ;;      `(,(string-append "mov____0x32(%ebp),%" r) (#:immediate ,n)))
       )))
@@ -258,9 +258,19 @@
 
 (define (riscv64:word-signed-r info)
   (let* ((r (get-r info))
-         (x (e->x r)))
-    `(("NOP" ;;,(string-append "movswl_%" x ",%" r)
+         ;(x (e->x r))
+         )
+    `(("NOP123" ;;,(string-append "movswl_%" x ",%" r)
        ))))
+
+(define (riscv64:long-r info)
+  (let* ((r (get-r info))
+         (e (r->e r)))
+    `((,(string-append "movzlq_%" e ",%" r)))))
+
+(define (riscv64:long-signed-r info)
+  (let* ((r (get-r info)))
+    `(,(string-append "FOO " r))))
 
 (define (riscv64:jump info label)
   ;; unconditional jump
@@ -795,5 +805,7 @@
     (word-r0->r1-mem . ,riscv64:word-r0->r1-mem)
     (word-r0-mem->r1-mem . ,riscv64:word-r0-mem->r1-mem)
     (word-signed-r . ,riscv64:word-signed-r)
+    (long-r . ,riscv64:long-r)
+    (long-signed-r . ,riscv64:long-signed-r)
     (xor-zf . ,riscv64:xor-zf)
     (zf->r . ,riscv64:zf->r)))
