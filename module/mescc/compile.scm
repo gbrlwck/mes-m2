@@ -930,7 +930,7 @@
                 (reg-size (->size "*" info))
                 (info (allocate-register info))
                 (info (append-text info (wrap-as (as info 'value->r value)))))
-           (if (or #t (> value 0) (= reg-size 4)) info
+           (if (or (> value 0) (= reg-size 4)) info
                (append-text info (wrap-as (as info 'long-signed-r))))))
 
         ((p-expr (float ,value))
@@ -966,7 +966,10 @@
          (expr->register initzer info))
 
         ;; offsetoff
-        ((ref-to (i-sel (ident ,field) (cast (type-name (decl-spec-list ,struct) (abs-declr (pointer))) (p-expr (fixed ,base)))))
+        ((ref-to (i-sel (ident ,field)
+                        (cast (type-name (decl-spec-list ,struct)
+                                         (abs-declr (pointer)))
+                              (p-expr (fixed ,base)))))
          (let* ((type (ast->basic-type struct info))
                 (offset (field-offset info type field))
                 (base (cstring->int base))
