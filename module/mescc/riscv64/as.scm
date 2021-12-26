@@ -40,7 +40,8 @@
 
 
 (define (riscv64:function-preamble . rest)
-  '(("RD_SP RS1_SP !-24 ADDI") ;; allocate stack
+  '(("# riscv64:function-preamble")
+    ("RD_SP RS1_SP !-24 ADDI") ;; allocate stack
     ("RS1_SP RS2_FP SD")       ;; save fp
     ("RS1_SP RS2_RA @8 SD")    ;; save ra
     ("RS1_SP RS2_TP @16 SD")   ;; save tp
@@ -51,14 +52,16 @@
   ;; allocate stack for local variables
   ;;    writing on the stack decreases the pointer
   ;;    if we want to allocate stack space we need to increase the pointer first
-  `(("RD_SP" (#:immediate ,(+ (* 4 1025) (* 20 4))) "ADDI")) ; 4*1024 buf, 20 local vars
+  `(("# riscv64:function-locals")
+    ("RD_SP" (#:immediate1 ,(+ (* 4 1025) (* 20 4))) "ADDI")) ; 4*1024 buf, 20 local vars
   )
 
 (define (riscv64:r->local info n)
   (or n (error "invalid value: riscv64:r->local: " n))
   (let ((r (get-r info))
         (n (- 0 (* 4 n)))) ;; whuat? negate 4n
-    `((,(string-append "RD_" r " " (#:immediate n) " SD")))
+    `(("# riscv64:r->local")
+      (,(string-append "RD_" r " " (#:immediate n) " SD")))
     ;; we align everything 64 bit (?)
     ;; `(,(if (< (abs n) #x80)
     ;;       `(,(string-append "mov____%" r ",0x8(%ebp)") (#:immediate1 ,n))
@@ -68,23 +71,27 @@
 (define (riscv64:value->r info v)
   ;; store value in register
   (let ((r (get-r info)))
-    `((,(string-append "RD_" r " ") (#:immediate1 v) " ADDI"))))
+    `(("# riscv64:value->r")
+      (,(string-append "RD_" r " ") (#:immediate1 ,v) " ADDI"))))
 
 (define (riscv64:ret . rest)
   ;; return (from function call)
-  '(("RETURN"))) ;; RS1_RA JALR
+  '(("# riscv64:ret")
+    ("RETURN"))) ;; RS1_RA JALR
 
 (define (riscv64:r-zero? info)
   ;; test whether register is equal to zero -> store 1 or 0 in T6
   (let ((r (get-r info)))
-    `((,(string-append "RS1_" r " RD_T6 SLTIU") ;;,(string-append "test___%" r "," "%" r)
+    `(("# riscv64:r-zero?")
+      (,(string-append "RD_T6 RS1_" r " SLTIU") ;;,(string-append "test___%" r "," "%" r)
        ))))
 
 (define (riscv64:local->r info n)
   ;; load local variable into register
   (let ((r (get-r info))
         (n (- 0 (* 4 n))))
-    `(,(string-append "RD_" r " RS1_SP " " LD ") (#:immediate1 n)
+    `(("# riscv64:local->r")
+      (,(string-append "RD_" r " RS1_SP " " LD ") (#:immediate1 ,n))
       ;; (if (< (abs n) #x80) `(,(string-append "mov____0x8(%ebp),%" r) (#:immediate1 ,n))
       ;;      `(,(string-append "mov____0x32(%ebp),%" r) (#:immediate ,n)))
       )))
@@ -100,7 +107,8 @@
 (define (riscv64:call-label info label n)
   ;; jump to label
   ;; not sure what n is for
-  `(("RD_A7" (#:offset ,label) "ADDI")
+  `(("# riscv64:call-label")
+    ("RD_A7" (#:offset ,label) "ADDI")
     ("JAL")
     ;;("add____$i8,%esp" (#:immediate1 ,(* n 4))) ;; not sure what this does in x86
     ))
@@ -108,13 +116,15 @@
 (define (riscv64:r->arg info i)
   ;; push register to stack
   (let ((r (get-r info)))
-    `((,(string-append "RD_SP RS1_" r " ADDI")
+    `(("# riscv64:r->arg")
+      (,(string-append "RD_SP RS1_" r " ADDI")
        ("RD_SP !-8 ADDI") ;,(string-append "push___%" r)
        ))))
 
 (define (riscv64:label->arg info label i)
   ;; store ?? TODO
-  `(("push___$i32" (#:address ,label))))
+  `(("# riscv64:label->arg")
+    ("push___$i32" (#:address ,label))))
 
 (define (riscv64:r-negate info)
   ;; negate a number?
@@ -180,8 +190,12 @@
 (define (riscv64:r-mem-add info v)
   ;; addition which can be stored/read from memory (but not both at the same time)
   (let ((r (get-r info)))
-    `(,(string-append "RD_" r " RS1_SP "
-                      `((,(if (< (abs v) #x80) #:immediate1 #:immediate) ,v))
+    `(";; riscv64:r-mem-add\n"
+      ,(string-append "RD_" r " RS1_SP "
+                      `((,(if (< (abs v) #x80)
+                              #:immediate1
+                              #:immediate)
+                         ,v))
                       " ADDI")
                          ;;`(,(if (< (abs v) #x80)
                          ;;       ;;`(,(string-append "RD_" r " RS1_SP " (#:immediate1 ,v) "ADDI")
@@ -241,42 +255,37 @@
   ;; this is unnecessary in riscv, as we have word-size all the time
   (let* ((r (get-r info))
          (l (e->l r)))
-    `(("NOP" ;;,(string-append "movzbl_%" l ",%" r)
-       ))))
+    `(("RD_" r " RS1_" r " LBU")))) ;;,(string-append "movzbl_%" l ",%" r)
 
 (define (riscv64:byte-signed-r info)
-  (let* ((r (get-r info))
-         (l (e->l r)))
-    `(("NOP" ;;,(string-append "movsbl_%" l ",%" r)
-       ))))
+  (let* ((r (get-r info)))
+    `(("RD_" r " RS1_" r " LB")))) ;;,(string-append "movsbl_%" l ",%" r)
 
 (define (riscv64:word-r info)
-  (let* ((r (get-r info))
-         (x (e->x r)))
-    `(("NOP" ;;,(string-append "movzwl_%" x ",%" r)
-       ))))
+  (let* ((r (get-r info)))
+    `(("RD_" r " RS1_" r " LWU")))) ;;,(string-append "movzwl_%" x ",%" r)
+
 
 (define (riscv64:word-signed-r info)
-  (let* ((r (get-r info))
-         ;(x (e->x r))
-         )
-    `(("NOP123" ;;,(string-append "movswl_%" x ",%" r)
-       ))))
+  (let* ((r (get-r info)))
+    `(("RD_" r " RS1_" r " LW")))) ;;,(string-append "movswl_%" x ",%" r)
+
 
 (define (riscv64:long-r info)
-  (let* ((r (get-r info))
-         (e (r->e r)))
-    `((,(string-append "movzlq_%" e ",%" r)))))
+  ;; load (unsigned) long into register
+  (let* ((r (get-r info)))
+    `((,(string-append "RD_" r " RS1_" r " LDU")))))
 
 (define (riscv64:long-signed-r info)
+  ;; load signed long into register
   (let* ((r (get-r info)))
-    `(,(string-append "FOO " r))))
+    `(("# riscv64:long-signed-r")
+      (,(string-append "RD_" r " RS1_" r " LD")))))
 
 (define (riscv64:jump info label)
   ;; unconditional jump
   `(,(string-append "RD_A0" (#:offset label) "ADDI")
-    ("JALR") ;; or JAL?
-    ;;("jmp32 " (#:offset ,label))
+    ("JALR") ;; or JAL? ;;("jmp32 " (#:offset ,label))
     ))
 
 (define (riscv64:jump-z info label)
