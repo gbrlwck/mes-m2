@@ -42,6 +42,8 @@
             c99-input->info
             c99-input->object))
 
+(define DEBUG? #t)
+
 (define mes? (pair? (current-module)))
 (define mes-or-reproducible? #t)
 (define (cc-amd? info) #f)              ; use AMD calling convention?
@@ -111,7 +113,7 @@
 
 (define (ast->type o info)
   (define (type-helper o info)
-    (if #t ;(getenv "MESC_DEBUG")
+    (if DEBUG? ;(getenv "MESC_DEBUG")
         (format (current-error-port) "type-helper: ~s\n" o))
     (pmatch o
       (,t (guard (type? t)) t)
@@ -156,6 +158,7 @@
       ((decl-spec-list (type-spec ,type)) (ast->type type info))
 
       ((fctn-call (p-expr (ident ,name)) . _)
+       (format (current-error-port) "fctn-call p-expr hit!")
        (or (and=> (assoc-ref (.functions info) name) function:type)
            (get-type "default" info)))
 
@@ -1692,7 +1695,7 @@
         (constants (.constants info))
         (types (.types info))
         (text (.text info)))
-    (if #t ;(getenv "MESC_DEBUG")
+    (if DEBUG? ;(getenv "MESC_DEBUG")
         (format (current-error-port) "ast->info: ~s\n" o))
     (pmatch o
       (((trans-unit . _) . _) (ast-list->info o info))
@@ -1730,9 +1733,12 @@
        (append-text info (wrap-as (asm->m1 arg0))))
 
       ((expr-stmt (fctn-call (p-expr (ident ,name)) (expr-list . ,expr-list)))
-       (if (equal? name "asm") (let ((arg0 (cadr (cadar expr-list))))
-                                 (append-text info (wrap-as (asm->m1 arg0))))
-           (let* ((info (expr->register `(fctn-call (p-expr (ident ,name)) (expr-list . ,expr-list)) info))
+       (if (equal? name "asm")
+           (let ((arg0 (cadr (cadar expr-list))))
+             (append-text info (wrap-as (asm->m1 arg0))))
+           (let* ((info (expr->register
+                         `(fctn-call (p-expr (ident ,name)) (expr-list . ,expr-list))
+                         info))
                   (info (free-register info))
                   (info (append-text info (wrap-as (as info 'r-zero?)))))
              info)))
@@ -1886,6 +1892,7 @@
          (append-text info (append (wrap-as (as info 'ret))))))
 
       ((return ,expr)
+       (if DEBUG? (format (current-error-port) "return ,expr (expr): ~s\n" expr))
        (let* ((info (fold (lambda (x info) (free-register info)) info (.allocated info)))
               (info (expr->register expr info))
               (info (free-register info)))

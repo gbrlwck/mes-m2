@@ -34,8 +34,8 @@
   (make <info> #:types riscv64:type-alist #:registers riscv64:registers #:instructions riscv64:instructions))
 
 (define riscv64:registers
-  ;; "A0" "A1" "A2" "A3" "A4" "A7" "FP" "PC" ;; these are meant to be freely allocateable, general use registers
-  '("T0" "T1" "T2" "T3" "T4" "T5" "T6"))
+  ;; these are meant to be freely allocateable, general use registers
+  '("T0" "T1" "T2" "T3" "T4" "T5" "T6")) ;; "A0" "A1" "A2" "A3" "A4" "A7" "FP" "PC"
 
 (define riscv64:type-alist
   `(("char" . ,(make-type 'signed 1 #f))

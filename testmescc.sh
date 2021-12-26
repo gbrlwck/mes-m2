@@ -4,6 +4,8 @@ TEST_DIR=lib/tests/scaffold/
 
 for file in ${TEST_DIR}*.c 
 do
+    echo
+    echo "compiling: " $file
     if ! $(./mescc-compile.sh $file); then
         echo $file "didn't compile"
         gcc -O0 -S $file
