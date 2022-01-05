@@ -68,6 +68,7 @@
   (car (if (pair? (.allocated info)) (.allocated info) (.registers info))))
 
 (define (get-r0 info)
+  ;; returns the second element of the allocated registers
   (cadr (.allocated info)))
 
 (define (get-r1 info)

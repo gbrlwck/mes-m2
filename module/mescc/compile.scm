@@ -1037,16 +1037,20 @@
                     (reg-size (->size "*" info))
                     (info (if (cc-amd? info)
                               (fold expr->arg info expr-list (iota (length expr-list)))
-                              (fold-right expr->arg info expr-list (reverse (iota (length expr-list))))))
-                    (info (clone info #:allocated '() #:pushed 0 #:registers (append (reverse allocated) registers)))
+                              (fold-right expr->arg info expr-list
+                                          (reverse (iota (length expr-list))))))
+                    (info (clone info #:allocated '() #:pushed 0 #:registers
+                                 (append (reverse allocated) registers)))
                     (n (length expr-list))
                     (info (if (not (assoc-ref locals name))
                               (begin
                                 (when (and (not (assoc name (.functions info)))
                                            (not (assoc name globals))
                                            (not (equal? name (.function info))))
-                                  (format (current-error-port) "warning: undeclared function: ~a\n" name))
-                                (append-text info (wrap-as (as info 'call-label name n))))
+                                  (format (current-error-port)
+                                          "warning: undeclared function: ~a\n" name))
+                                (append-text info
+                                             (wrap-as (as info 'call-label name n))))
                               (let* ((info (expr->register `(p-expr (ident ,name)) info))
                                      (info (append-text info (wrap-as (as info 'call-r n)))))
                                 info)))
@@ -1489,6 +1493,7 @@
               (else '())))))
 
 (define (binop->r info)
+  ;; "c . rest" seems unnecessary? same as (lambda (a b . rest)) and (apply as info rest) ?
   (lambda (a b c . rest)
     (let* ((info (expr->register a info))
            (info (expr->register b info))
@@ -2225,8 +2230,14 @@
          (local (if (not array?) local
                     (let ((size (or (and string (max size (1+ (string-length string))))
                                     size)))
-                      (make-local-entry name type (+ (local:id (cdr local)) -1 (quotient (+ size (1- reg-size)) reg-size))))))
-         (local (if struct? (make-local-entry name type (+ (local:id (cdr local)) (quotient (+ size (1- reg-size)) reg-size)))
+                      (make-local-entry name type (+
+                                                   (local:id (cdr local))
+                                                   -1
+                                                   (quotient
+                                                    (+ size (1- reg-size)) reg-size))))))
+         (local (if struct?
+                    (make-local-entry name type (+ (local:id (cdr local))
+                                                   (quotient (+ size (1- reg-size)) reg-size)))
                     local))
          (locals (cons local locals))
          (info (clone info #:locals locals))
@@ -2299,9 +2310,9 @@
                                 (loop (cdr inits))))
                        (_
                         (let* ((count (min (length inits) (length init-fields)))
-                                 (field-inits (list-head inits count)))
+                               (field-inits (list-head inits count)))
                           (append (array-init-element->data type `(initzer-list ,@field-inits) info)
-                           (loop (list-tail inits count))))))))))
+                                  (loop (list-tail inits count))))))))))
            (map (cut array-init-element->data type <> info) inits))))
 
     (((initzer (initzer-list . ,inits)))
