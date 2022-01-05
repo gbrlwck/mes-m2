@@ -30,12 +30,34 @@
   #:use-module (mescc riscv64 as)
   #:export (riscv64-info))
 
+;; register dedication:
+;; RA (x1) :: return address
+;; SP (x2) :: stack pointer
+;; FP/S0 (x8) :: frame/base pointer
+;; A0 (x10) :: function argument / return value
+;; A1 (x11) :: function argument / return value
+;; A2 (x12) :: function argument
+;; ..
+;; A7 (x17) :: function argument
+;; A5 (x15) :: function argument
+;; T4 (x29) :: comparison temporary (where results of subtractions get to be) ? necessary?
+;; T5 (x30) :: jump destination
+;; T6 (x31) :: for Zero-Flag
+
+
 (define (riscv64-info)
-  (make <info> #:types riscv64:type-alist #:registers riscv64:registers #:instructions riscv64:instructions))
+  (make <info>
+    #:types riscv64:type-alist
+    #:registers riscv64:registers
+    #:instructions riscv64:instructions))
 
 (define riscv64:registers
   ;; these are meant to be freely allocateable, general use registers
-  '("T0" "T1" "T2" "T3" "T4" "T5" "T6")) ;; "A0" "A1" "A2" "A3" "A4" "A7" "FP" "PC"
+  '("T0" "T1" "T2" "T3"))
+;; "A0" "A1" "A2" "A3" "A4" "A7" "FP" "PC"
+;; T4: comparison temp storage ? necessary?
+;; T5: jump destination register
+;; T6: truth storage (after comparison operations, like flag register on x86)
 
 (define riscv64:type-alist
   `(("char" . ,(make-type 'signed 1 #f))

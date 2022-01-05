@@ -42,7 +42,7 @@
             c99-input->info
             c99-input->object))
 
-(define DEBUG? #t)
+(define DEBUG? #f)
 
 (define mes? (pair? (current-module)))
 (define mes-or-reproducible? #t)
@@ -53,11 +53,12 @@
   (if %reduced-register-count %reduced-register-count
    (length (append (.registers info) (.allocated info)))))
 
-(define flaggy-arch? #f)
+(define riscy-arch? #f) ;; will be set to true if we do not operate for an architecture using flag registers
+;; currently, this is only set to true if we work on riscv64
 
 (define* (c99-input->info info #:key (prefix "") (defines '()) (includes '()) (arch "") verbose?)
   (when (equal? arch "riscv64")
-    (set! flaggy-arch? #t))
+    (set! riscy-arch? #t))
   (let ((ast (c99-input->ast #:prefix prefix #:defines defines #:includes includes #:arch arch #:verbose? verbose?)))
     (c99-ast->info info ast #:verbose? verbose?)))
 
@@ -1258,50 +1259,64 @@
                 (info (free-register info)))
            info))
 
-        ((eq ,a ,b) (let ((info ((binop->r info) a b 'r0-r1)))
-                      (append-text info (wrap-as (as info 'zf->r)))))
+        ((eq ,a ,b)
+         (if riscy-arch?
+             ((binop->r info) a b 'eq)
+             (let ((info ((binop->r info) a b 'r0-r1)))
+               (append-text info (wrap-as (as info 'zf->r))))))
 
         ((ge ,a ,b)
-         (let* ((type-a (ast->type a info))
-                (type-b (ast->type b info))
-                (info ((binop->r info) a b 'r0-r1))
-                (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'ae?->r 'ge?->r))
-                (info (append-text info (wrap-as (as info test->r))))
-                (info (append-text info (wrap-as (as info 'test-r)))))
-           info))
+         (if riscy-arch?
+             ((binop->r info) a b 'ge)
+             (let* ((type-a (ast->type a info))
+                 (type-b (ast->type b info))
+                 (info ((binop->r info) a b 'r0-r1))
+                 (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'ae?->r 'ge?->r))
+                 (info (append-text info (wrap-as (as info test->r))))
+                 (info (append-text info (wrap-as (as info 'test-r)))))
+            info)))
 
         ((gt ,a ,b)
-         (let* ((type-a (ast->type a info))
-                (type-b (ast->type b info))
-                (info ((binop->r info) a b 'r0-r1))
-                (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'a?->r 'g?->r))
-                (info (append-text info (wrap-as (as info test->r))))
-                (info (append-text info (wrap-as (as info 'test-r)))))
-           info))
+         (if riscy-arch?
+             ((binop->r info) a b 'gt)
+             (let* ((type-a (ast->type a info))
+                    (type-b (ast->type b info))
+                    (info ((binop->r info) a b 'r0-r1))
+                    (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'a?->r 'g?->r))
+                    (info (append-text info (wrap-as (as info test->r))))
+                    (info (append-text info (wrap-as (as info 'test-r)))))
+               info)))
 
-        ((ne ,a ,b) (let* ((info ((binop->r info) a b 'r0-r1))
-                           (info (append-text info (wrap-as (as info 'test-r))))
-                           (info (append-text info (wrap-as (as info 'xor-zf))))
-                           (info (append-text info (wrap-as (as info 'zf->r)))))
-                      info))
+        ((ne ,a ,b)
+         (if riscy-arch?
+             ((binop->r info) a b 'ne)
+             (let* ((info ((binop->r info) a b 'r0-r1))
+                 (info (append-text info (wrap-as (as info 'test-r))))
+                 (info (append-text info (wrap-as (as info 'xor-zf))))
+                 (info (append-text info (wrap-as (as info 'zf->r)))))
+            info)))
 
         ((le ,a ,b)
-         (let* ((type-a (ast->type a info))
-                (type-b (ast->type b info))
-                (info ((binop->r info) a b 'r0-r1))
-                (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'be?->r 'le?->r))
-                (info (append-text info (wrap-as (as info test->r))))
-                (info (append-text info (wrap-as (as info 'test-r)))))
-           info))
+         (if riscy-arch?
+             ((binop->r info) a b 'le)
+             (let* ((type-a (ast->type a info))
+                 (type-b (ast->type b info))
+                 (info ((binop->r info) a b 'r0-r1))
+                 (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'be?->r 'le?->r))
+                 (info (append-text info (wrap-as (as info test->r))))
+                 (info (append-text info (wrap-as (as info 'test-r)))))
+            info)))
 
         ((lt ,a ,b)
-         (let* ((type-a (ast->type a info))
-                (type-b (ast->type b info))
-                (info ((binop->r info) a b 'r0-r1))
-                (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'b?->r 'l?->r))
-                (info (append-text info (wrap-as (as info test->r))))
-                (info (append-text info (wrap-as (as info 'test-r)))))
-           info))
+         (if riscy-arch?
+             ((binop->r info) a b 'lt)
+             (let* ((type-a (ast->type a info))
+                 (type-b (ast->type b info))
+                 (info ((binop->r info) a b 'r0-r1))
+                 (test->r (if (or (unsigned? type-a) (unsigned? type-b)) 'b?->r 'l?->r))
+                 (info (append-text info (wrap-as (as info test->r))))
+                 (info (append-text info (wrap-as (as info 'test-r)))))
+            info)))
 
         ((or ,a ,b)
          (let* ((info (expr->register a info))
@@ -2287,10 +2302,10 @@
                    (inits (append inits
                                   (map (const '(fixed "0")) (iota missing)))))
               (map (cut array-init-element->data (c-array:type type) <> info) inits)))
-         (else
-          (format (current-error-port) "array-init-element->data: oops:~s\n" o)
-          (format (current-error-port) "type:~s\n" type)
-          (error "array-init-element->data: not supported: " o))))
+           (else
+            (format (current-error-port) "array-init-element->data: oops:~s\n" o)
+            (format (current-error-port) "type:~s\n" type)
+            (error "array-init-element->data: not supported: " o))))
     (_ (init->data type o info))
     (_ (error "array-init-element->data: not supported: " o))))
 

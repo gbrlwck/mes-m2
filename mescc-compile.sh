@@ -12,6 +12,7 @@ guile \
     -e main                              \
     scripts/mescc.scm                    \
     -D HAVE_CONFIG_H=1                   \
+    -L lib/                              \
     -I include/                          \
     -I include/linux/riscv64/            \
     --arch=riscv64 --verbose             \
