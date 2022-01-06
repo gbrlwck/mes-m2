@@ -225,9 +225,9 @@
                               (option-ref options 'nostdlib #f)) '()
                               `("-f" ,(arch-find options "crt1.o"))))
          (command `(,hex2
-                    "--LittleEndian"
+                    "--little-endian"
                     ,@(arch-get-architecture options)
-                    "--BaseAddress" ,base-address
+                    "--base-address" ,base-address
                     "-f" ,(kernel-find
                            options
                            (string-append "elf" machine "-header.hex2"))
