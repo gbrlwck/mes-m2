@@ -26,23 +26,19 @@
 static long
 __sys_call_internal (long sys_call)
 {
-  asm ("RD_A7 RS1_FP LD");// asm ("ld_____%a7,0x10(%fp)");
-
+  asm ("RD_A7 RS1_FP LD");
   asm ("ECALL");
-
-  asm ("RD_T0 RS1_A0 ADDI");// asm ("mv_____%t0,%a0");
+  asm ("RD_T0 RS1_A0 ADDI");
 }
 
 static long
 __sys_call2_internal (long sys_call, long one, long two)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
-  asm ("RD_A0 RS1_FP 0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
-  asm ("RD_A1 RS1_FP 0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
-
+  asm ("RD_A7 RS1_FP !0x10 LD");
+  asm ("RD_A0 RS1_FP !0x18 LD");
+  asm ("RD_A1 RS1_FP !0x20 LD");
   asm ("ECALL");
-
-  asm ("RD_T0 RS1_A0 ADDI");// asm ("mv_____%t0,%a0");
+  asm ("RD_T0 RS1_A0 ADDI");
 }
 
 /* Return < 0 on error (errno-like value from kernel), or 0 on success */

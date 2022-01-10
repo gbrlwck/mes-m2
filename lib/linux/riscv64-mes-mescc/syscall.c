@@ -26,7 +26,7 @@
 long
 __sys_call (long sys_call)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
+  asm ("RD_A7 RS1_FP !0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
 
   asm ("ECALL");
 
@@ -36,8 +36,8 @@ __sys_call (long sys_call)
 long
 __sys_call1 (long sys_call, long one)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
-  asm ("RD_A0 RS1_FP 0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
+  asm ("RD_A7 RS1_FP !0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
+  asm ("RD_A0 RS1_FP !0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
 
   asm ("ECALL");
 
@@ -47,9 +47,9 @@ __sys_call1 (long sys_call, long one)
 long
 __sys_call2 (long sys_call, long one, long two)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
-  asm ("RD_A0 RS1_FP 0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
-  asm ("RD_A1 RS1_FP 0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
+  asm ("RD_A7 RS1_FP !0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
+  asm ("RD_A0 RS1_FP !0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
+  asm ("RD_A1 RS1_FP !0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
 
   asm ("ECALL");
 
@@ -59,10 +59,10 @@ __sys_call2 (long sys_call, long one, long two)
 long
 __sys_call3 (long sys_call, long one, long two, long three)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
-  asm ("RD_A0 RS1_FP 0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
-  asm ("RD_A1 RS1_FP 0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
-  asm ("RD_A2 RS1_FP 0x28 LD");// asm ("ld_____%a2,0x28(%fp)");
+  asm ("RD_A7 RS1_FP !0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
+  asm ("RD_A0 RS1_FP !0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
+  asm ("RD_A1 RS1_FP !0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
+  asm ("RD_A2 RS1_FP !0x28 LD");// asm ("ld_____%a2,0x28(%fp)");
 
   asm ("ECALL");
 
@@ -72,11 +72,11 @@ __sys_call3 (long sys_call, long one, long two, long three)
 long
 __sys_call4 (long sys_call, long one, long two, long three, long four)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
-  asm ("RD_A0 RS1_FP 0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
-  asm ("RD_A1 RS1_FP 0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
-  asm ("RD_A2 RS1_FP 0x28 LD");// asm ("ld_____%a2,0x28(%fp)");
-  asm ("RD_A3 RS1_FP 0x30 LD");// asm ("ld_____%a3,0x30(%fp)");
+  asm ("RD_A7 RS1_FP !0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
+  asm ("RD_A0 RS1_FP !0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
+  asm ("RD_A1 RS1_FP !0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
+  asm ("RD_A2 RS1_FP !0x28 LD");// asm ("ld_____%a2,0x28(%fp)");
+  asm ("RD_A3 RS1_FP !0x30 LD");// asm ("ld_____%a3,0x30(%fp)");
 
   asm ("ECALL");
 
@@ -86,12 +86,12 @@ __sys_call4 (long sys_call, long one, long two, long three, long four)
 long
 __sys_call5 (long sys_call, long one, long two, long three, long four, long five)
 {
-  asm ("RD_A7 RS1_FP 0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
-  asm ("RD_A0 RS1_FP 0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
-  asm ("RD_A1 RS1_FP 0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
-  asm ("RD_A2 RS1_FP 0x28 LD");// asm ("ld_____%a2,0x28(%fp)");
-  asm ("RD_A3 RS1_FP 0x30 LD");// asm ("ld_____%a3,0x30(%fp)");
-  asm ("RD_A4 RS1_FP 0x38 LD");// asm ("ld_____%a4,0x38(%fp)");
+  asm ("RD_A7 RS1_FP !0x10 LD");// asm ("ld_____%a7,0x10(%fp)");
+  asm ("RD_A0 RS1_FP !0x18 LD");// asm ("ld_____%a0,0x18(%fp)");
+  asm ("RD_A1 RS1_FP !0x20 LD");// asm ("ld_____%a1,0x20(%fp)");
+  asm ("RD_A2 RS1_FP !0x28 LD");// asm ("ld_____%a2,0x28(%fp)");
+  asm ("RD_A3 RS1_FP !0x30 LD");// asm ("ld_____%a3,0x30(%fp)");
+  asm ("RD_A4 RS1_FP !0x38 LD");// asm ("ld_____%a4,0x38(%fp)");
 
   asm ("ECALL");
 
