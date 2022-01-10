@@ -57,7 +57,7 @@ struct stat
   unsigned long  __foo0;
   unsigned long  __foo1;
 };
-#elif __x86_64__
+#elif __x86_64__ || __riscv64__
 struct stat
 {
   unsigned long  st_dev;
