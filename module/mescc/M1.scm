@@ -72,18 +72,22 @@
 (define hex? #t)
 
 (define (hex2:immediate o)
+  ;; 32 bit immediate (relative address)
   (if hex? (string-append "%0x" (dec->hex o))
       (string-append "%" (number->string o))))
 
 (define (hex2:immediate1 o)
+  ;; 8 bit immediate (relative address)
   (if hex? (string-append "!0x" (dec->hex o))
       (string-append "!" (number->string o))))
 
 (define (hex2:immediate2 o)
+  ;; 16 bit immediate (relative address)
   (if hex? (string-append "@0x" (dec->hex o))
       (string-append "@" (number->string o))))
 
 (define (hex2:immediate4 o)
+  ;; identical to hex2:immediate
   (if hex? (string-append "%0x" (dec->hex o))
       (string-append "%" (number->string o))))
 
