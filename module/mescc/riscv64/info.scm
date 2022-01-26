@@ -52,7 +52,8 @@
 
 (define riscv64:registers
   ;; these are meant to be freely allocateable, general use registers
-  '("T0" "T1" "T2" "T3"))
+  '("A0" "T0" "T1" "T2" "T3"))
+;; the first of these registers is used to pass return values (equivalent to eax in x86)
 ;; T4: comparison temp storage ? necessary?
 ;; T5: jump destination register
 ;; T6: truth storage (after comparison operations, like flag register on x86)
